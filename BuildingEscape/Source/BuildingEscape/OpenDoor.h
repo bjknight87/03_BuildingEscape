@@ -23,12 +23,16 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	void OpenDoor();
+
 private:
 
-	UPROPERTY(VisibleAnywhere)
-		float OpenAngle = 90.f;
+	UPROPERTY(EditAnywhere)
+		float OpenAngle = -90.f;
 
 	UPROPERTY(EditAnywhere)
 		ATriggerVolume* PressurePlate;
-	
+
+	AActor* ActorThatOpens; // Remember pawn inherits from actor; otherwise known as pawn IS A actor
+
 };
