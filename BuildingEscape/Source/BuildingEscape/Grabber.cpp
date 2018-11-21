@@ -27,7 +27,11 @@ void UGrabber::SetupInputComponent()
 {	
 	// Get input component
 	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
-	if (InputComponent) 
+	if (InputComponent == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Input component component not found in SetupInputComponent method for %s!\n"), *GetOwner()->GetName());
+	}
+	else if (InputComponent) 
 	{
 		/// Bind the input axis
 		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
@@ -49,7 +53,24 @@ void UGrabber::FindPhysicsHandleComponent()
 	}
 }
 
-void UGrabber::Grab() 
+// Called every frame
+void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	// if the physics handle is attached
+	if (!PhysicsHandle) {
+		UE_LOG(LogTemp, Error, TEXT("Physics handle component not found in TickComponent method for %s!\n"), *GetOwner()->GetName()); 
+		return; 
+	}
+	if (PhysicsHandle->GrabbedComponent)
+	{
+		// move the object that we are holding
+		PhysicsHandle->SetTargetLocation(GetReachLineEnd());
+	}
+}
+
+void UGrabber::Grab()
 {
 	/// Line trace and see if we reach any actors with physics body collision channel set
 	auto HitResult = GetFirstPhysicsBodyInReach();
@@ -59,6 +80,10 @@ void UGrabber::Grab()
 	/// If we hit something then attach a physics handle
 	if (ActorHit)
 	{
+		if (!PhysicsHandle) { 
+			UE_LOG(LogTemp, Error, TEXT("Physics handle component not found in Grab method for %s!\n"), *GetOwner()->GetName());
+			return; 
+		}
 		PhysicsHandle->GrabComponent(
 			ComponentToGrab,
 			NAME_None, // no bones so no name needed
@@ -68,23 +93,15 @@ void UGrabber::Grab()
 	}
 }
 
-void UGrabber::Release() 
+void UGrabber::Release()
 {
+	if (!PhysicsHandle) { 
+		UE_LOG(LogTemp, Error, TEXT("Physics handle component not found in Release method for %s!\n"), *GetOwner()->GetName()); 
+		return; 
+	}
 	PhysicsHandle->ReleaseComponent();
 }
 
-// Called every frame
-void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// if the physics handle is attached
-	if (PhysicsHandle->GrabbedComponent)
-	{
-		// move the object that we are holding
-		PhysicsHandle->SetTargetLocation(GetReachLineEnd());
-	}
-}
 
 const FHitResult UGrabber::GetFirstPhysicsBodyInReach()
 {
@@ -109,7 +126,10 @@ void UGrabber::WhatGotHit(FHitResult HitResult)
 {
 	/// See what we hit
 	AActor* ActorHit = HitResult.GetActor();
-	if (ActorHit) 
+	if (ActorHit == nullptr) { 
+		UE_LOG(LogTemp, Error, TEXT("Hit Result not found, null pointer!"));
+		return; 
+	} else if (ActorHit) 
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Line trace hit: %s"), *(ActorHit->GetName()));
 	}
