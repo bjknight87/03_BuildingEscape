@@ -28,7 +28,6 @@ protected:
 private:
 	FVector PlayerViewPointLocation;
 	FRotator PlayerViewPointRotation;
-
 	// How far ahead of the player can we reach in cm
 	float Reach = 100.f;
 
@@ -49,4 +48,11 @@ private:
 
 	// Return hit for first physics body in reach
 	const FHitResult GetFirstPhysicsBodyInReach();
+
+	void WhatGotHit(FHitResult);
+
+	// Returns current end of reach line
+	FVector GetReachLineEnd();
+
+	FVector GetReachLineStart();
 };
